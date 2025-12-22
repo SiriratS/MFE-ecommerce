@@ -29,8 +29,6 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -47,7 +45,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
       
       - name: Cache Nx
         uses: actions/cache@v4
@@ -77,8 +75,6 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -95,7 +91,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
       
       - name: Restore Nx cache
         uses: actions/cache@v4
@@ -128,8 +124,6 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -146,7 +140,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
       
       - name: Restore Nx cache
         uses: actions/cache@v4
@@ -187,8 +181,6 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -205,7 +197,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
       
       - name: Restore Nx cache
         uses: actions/cache@v4
@@ -243,8 +235,6 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -261,8 +251,10 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
       
       - name: Run pnpm audit
         run: pnpm audit --audit-level=high
         continue-on-error: false
+
+
