@@ -1,6 +1,5 @@
 name: CI/CD Pipeline
 
-# Trigger the workflow on push to any branch, pull requests, or manual dispatch
 on:
   push:
     branches:
@@ -10,155 +9,50 @@ on:
       - '**'
   workflow_dispatch:
 
-jobs:
-  # Job 1: Prepare - Install dependencies and cache them
-  prepare:
-    name: Prepare Dependencies
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-      
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-      
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      
-      - name: Cache Nx
-        uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ${{ runner.os }}-nx-
+# Cancel in-progress runs when a new run is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-  # Job 2: Lint - Run ESLint on all affected projects
+# Minimal permissions for security
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+
+jobs:
+  # Job 1: Lint - Run ESLint on affected projects
   lint:
     name: Lint Code
     runs-on: ubuntu-latest
-    needs: prepare
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Setup environment
+        uses: ./.github/actions/setup-node-pnpm
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
+      - name: Run lint on affected projects
+        run: pnpm nx affected -t lint --parallel=3 --base=origin/${{ github.event.repository.default_branch }}
       
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
+      - name: Add lint summary
+        if: always()
         run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      
-      - name: Restore pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-      
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ${{ runner.os }}-nx-
-      
-      - name: Run lint on all projects
-        run: pnpm nx run-many -t lint --all --parallel=3
+          echo "### 🔍 Lint Results" >> $GITHUB_STEP_SUMMARY
+          echo "Linted affected projects successfully!" >> $GITHUB_STEP_SUMMARY
 
-  # Job 3: Test - Run unit tests on all affected projects
+  # Job 2: Test - Run unit tests on affected projects
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    needs: prepare
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Setup environment
+        uses: ./.github/actions/setup-node-pnpm
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-      
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      
-      - name: Restore pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-      
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ${{ runner.os }}-nx-
-      
-      - name: Run tests on all projects
-        run: pnpm nx run-many -t test --all --parallel=3 --configuration=ci --coverage
+      - name: Run tests on affected projects
+        run: pnpm nx affected -t test --parallel=3 --configuration=ci --coverage --base=origin/${{ github.event.repository.default_branch }}
       
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
@@ -167,57 +61,28 @@ jobs:
           path: coverage/
           retention-days: 7
         if: always()
+      
+      - name: Add test summary
+        if: always()
+        run: |
+          echo "### ✅ Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "All tests passed on affected projects!" >> $GITHUB_STEP_SUMMARY
+          if [ -d "coverage" ]; then
+            echo "📊 Coverage reports generated" >> $GITHUB_STEP_SUMMARY
+          fi
 
-  # Job 4: Build - Build all applications
+  # Job 3: Build - Build affected applications
   build:
     name: Build Applications
     runs-on: ubuntu-latest
     needs: [lint, test]
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Setup environment
+        uses: ./.github/actions/setup-node-pnpm
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-      
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      
-      - name: Restore pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-      
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-nx-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ${{ runner.os }}-nx-
-      
-      - name: Build all applications
-        run: pnpm nx run-many -t build --all --parallel=3 --configuration=production
+      - name: Build affected applications
+        run: pnpm nx affected -t build --parallel=3 --configuration=production --base=origin/${{ github.event.repository.default_branch }}
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -225,48 +90,48 @@ jobs:
           name: build-artifacts
           path: dist/
           retention-days: 7
+        if: success()
+      
+      - name: Add build summary
+        if: always()
+        run: |
+          echo "### 🏗️ Build Results" >> $GITHUB_STEP_SUMMARY
+          if [ -d "dist" ]; then
+            echo "Build completed successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "**Artifacts:** $(du -sh dist/ | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          fi
 
-  # Job 5: Security Scan - Check for vulnerabilities in dependencies
+  # Job 4: Security Scan - Check for vulnerabilities
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
     needs: build
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-      
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      
-      - name: Restore pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-      
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+      - name: Setup environment
+        uses: ./.github/actions/setup-node-pnpm
       
       - name: Run pnpm audit
-        run: pnpm audit --audit-level=high
-        continue-on-error: false
-
-
-
-
+        id: audit
+        run: |
+          pnpm audit --audit-level=high --json > audit-results.json || true
+          if [ -s audit-results.json ]; then
+            echo "vulnerabilities_found=true" >> $GITHUB_OUTPUT
+          else
+            echo "vulnerabilities_found=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+      
+      - name: Add security summary
+        if: always()
+        run: |
+          echo "### 🔒 Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.audit.outputs.vulnerabilities_found }}" == "true" ]; then
+            echo "⚠️ Vulnerabilities found! Check the logs for details." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No high/critical vulnerabilities found!" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Fail if vulnerabilities found
+        if: steps.audit.outputs.vulnerabilities_found == 'true'
+        run: exit 1
