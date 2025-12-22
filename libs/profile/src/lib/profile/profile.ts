@@ -54,12 +54,12 @@ export class ProfileComponent implements OnInit {
 
   getStatusClass(status: string): string {
     const classes: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-700',
-      processing: 'bg-blue-100 text-blue-700',
-      shipped: 'bg-purple-100 text-purple-700',
-      delivered: 'bg-green-100 text-green-700',
+      pending: 'bg-neutral-100 text-neutral-700',
+      processing: 'bg-neutral-200 text-neutral-800',
+      shipped: 'bg-accent-100 text-accent-700',
+      delivered: 'bg-neutral-900 text-white',
     };
-    return classes[status] || 'bg-gray-100 text-gray-700';
+    return classes[status] || 'bg-neutral-100 text-neutral-700';
   }
 
   private loadMockOrders() {
