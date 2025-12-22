@@ -1,1 +1,7 @@
+packages:
+  - 'apps/*'
+  - 'libs/*'
+  - 'cart-mfe'
+  - 'profile-mfe'
+
 autoInstallPeers: true
