@@ -29,6 +29,8 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -75,6 +77,8 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -124,6 +128,8 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -181,6 +187,8 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -235,6 +243,8 @@ jobs:
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10
       
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -256,5 +266,7 @@ jobs:
       - name: Run pnpm audit
         run: pnpm audit --audit-level=high
         continue-on-error: false
+
+
 
 
