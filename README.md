@@ -1,101 +1,399 @@
-# EcommercePlatform
+# 🛍️ Angular Micro-Frontend E-Commerce Platform
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A modern e-commerce platform demonstrating **Angular 20** micro-frontend architecture with **Module Federation**, **NgRx Signals**, and **Tailwind CSS**.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## 🎯 Project Overview
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+This project showcases advanced Angular patterns including:
 
-## Run tasks
+- ✅ **Angular Signals** - Reactive state management with signals
+- ✅ **NgRx + Signals** - Signal-based stores for global state
+- ✅ **Module Federation** - Micro-frontend architecture with Native Federation
+- ✅ **Tailwind CSS + SCSS** - Modern styling with utility-first CSS
+- ✅ **Jest** - Unit testing framework
+- ✅ **Playwright** - End-to-end testing
+- ✅ **Nx Monorepo** - Efficient workspace management
 
-To run the dev server for your app, use:
+## 📁 Project Structure
 
-```sh
-npx nx serve main
+```
+ecommerce-platform/
+├── apps/
+│   ├── main/                    # Host application (port 4200)
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── navigation.component.ts
+│   │   │   │   │   └── product-list.component.ts
+│   │   │   │   └── app.routes.ts
+│   │   └── federation.config.js
+│   └── main-e2e/               # E2E tests
+│
+├── cart-mfe/                    # Shopping cart micro-frontend (port 4201)
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── cart/
+│   │   │   │   └── cart.component.ts
+│   │   │   └── remote-entry/
+│   │   │       └── entry.routes.ts
+│   └── federation.config.js
+│
+├── profile-mfe/                 # User profile micro-frontend (port 4202)
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── profile/
+│   │   │   │   └── profile.component.ts
+│   │   │   └── remote-entry/
+│   │   │       └── entry.routes.ts
+│   └── federation.config.js
+│
+└── libs/
+    └── shared/
+        ├── data-access/         # NgRx Signal Stores
+        │   └── src/lib/stores/
+        │       ├── product.store.ts
+        │       ├── cart.store.ts
+        │       └── auth.store.ts
+        └── models/              # TypeScript interfaces
+            └── src/lib/models.ts
 ```
 
-To create a production bundle:
+## 🚀 Getting Started
 
-```sh
-npx nx build main
+### Prerequisites
+
+- **Node.js** 18.x or higher
+- **pnpm** 8.x or higher
+
+### Installation
+
+1. **Clone the repository** (if applicable):
+   ```bash
+   cd ecommerce-platform
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
+
+### Running the Application
+
+You need to run all three applications simultaneously for the full micro-frontend experience.
+
+#### Option 1: Run All Apps (Recommended)
+
+```bash
+# Terminal 1: Main application (host)
+pnpm nx serve main
+
+# Terminal 2: Cart micro-frontend
+pnpm nx serve cart-mfe
+
+# Terminal 3: Profile micro-frontend
+pnpm nx serve profile-mfe
 ```
 
-To see all available targets to run for a project, run:
+#### Option 2: Run in Parallel
 
-```sh
-npx nx show project main
+```bash
+pnpm nx run-many --target=serve --projects=main,cart-mfe,profile-mfe --parallel
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### Access the Application
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- **Main App**: http://localhost:4200
+- **Cart MFE**: http://localhost:4201 (loaded dynamically by main app)
+- **Profile MFE**: http://localhost:4202 (loaded dynamically by main app)
 
-## Add new projects
+## 🏗️ Architecture
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+### Module Federation
 
-Use the plugin's generator to create new projects.
+The project uses **@angular-architects/native-federation** for micro-frontend architecture:
 
-To generate a new application, use:
+- **main** (Host): Loads and orchestrates remote micro-frontends
+- **cart-mfe** (Remote): Exposes cart functionality
+- **profile-mfe** (Remote): Exposes user profile functionality
 
-```sh
-npx nx g @nx/angular:app demo
+### State Management with NgRx Signals
+
+#### Product Store
+```typescript
+const ProductStore = signalStore(
+  { providedIn: 'root' },
+  withState({ products: [], loading: false, filter: '' }),
+  withComputed((store) => ({
+    filteredProducts: computed(() => /* filtering logic */),
+    productCount: computed(() => store.products().length)
+  })),
+  withMethods((store) => ({
+    loadProducts(products: Product[]) { /* ... */ },
+    setFilter(filter: string) { /* ... */ }
+  }))
+);
 ```
 
-To generate a new library, use:
-
-```sh
-npx nx g @nx/angular:lib mylib
+#### Cart Store
+```typescript
+const CartStore = signalStore(
+  { providedIn: 'root' },
+  withState({ items: [] }),
+  withComputed((store) => ({
+    totalItems: computed(() => /* sum quantities */),
+    totalPrice: computed(() => /* calculate total */),
+    isEmpty: computed(() => store.items().length === 0)
+  })),
+  withMethods((store) => ({
+    addItem(item: CartItem) { /* ... */ },
+    removeItem(productId: string) { /* ... */ },
+    updateQuantity(productId: string, quantity: number) { /* ... */ }
+  }))
+);
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+#### Auth Store
+```typescript
+const AuthStore = signalStore(
+  { providedIn: 'root' },
+  withState({ user: null, isAuthenticated: false }),
+  withComputed((store) => ({
+    userName: computed(() => store.user()?.name ?? 'Guest'),
+    userEmail: computed(() => store.user()?.email ?? '')
+  })),
+  withMethods((store) => ({
+    login(user: User) { /* ... */ },
+    logout() { /* ... */ }
+  }))
+);
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+### Shared State Across Micro-Frontends
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+All micro-frontends share state through the centralized NgRx Signal stores:
 
-### Step 2
+1. **Main App** manages product catalog and adds items to cart
+2. **Cart MFE** reads and modifies cart state
+3. **Profile MFE** reads authentication state and displays user info
 
-Use the following command to configure a CI workflow for your workspace:
+This demonstrates true state sharing across independently deployed micro-frontends!
 
-```sh
-npx nx g ci-workflow
+## 🎨 Styling
+
+### Tailwind CSS Configuration
+
+The project uses Tailwind CSS v4 with custom color palettes:
+
+```javascript
+// tailwind.config.js
+module.exports = {
+  content: [
+    './apps/main/src/**/*.{html,ts}',
+    './cart-mfe/src/**/*.{html,ts}',
+    './profile-mfe/src/**/*.{html,ts}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: { /* blue shades */ },
+        secondary: { /* purple shades */ }
+      }
+    }
+  }
+};
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Custom SCSS Styles
 
-## Install Nx Console
+Global styles in `apps/main/src/styles.scss`:
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+```scss
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+.card {
+  @apply rounded-lg shadow-md p-6 bg-white transition-all duration-300;
+  
+  &:hover {
+    @apply shadow-xl;
+    transform: translateY(-4px);
+  }
+}
 
-## Useful links
+.btn-primary {
+  @apply px-6 py-3 bg-primary-500 text-white rounded-lg font-semibold;
+  
+  &:hover {
+    @apply bg-primary-600 shadow-lg;
+    transform: translateY(-2px);
+  }
+}
+```
 
-Learn more:
+## 🧪 Testing
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Unit Tests (Jest)
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Run unit tests for all projects:
+
+```bash
+# Test all projects
+pnpm nx run-many --target=test --all
+
+# Test specific project
+pnpm nx test main
+pnpm nx test cart-mfe
+pnpm nx test profile-mfe
+
+# Test with coverage
+pnpm nx test main --coverage
+```
+
+### E2E Tests (Playwright)
+
+Run end-to-end tests:
+
+```bash
+# Run E2E tests
+pnpm nx e2e main-e2e
+
+# Run in UI mode
+pnpm nx e2e main-e2e --ui
+
+# Run specific test file
+pnpm nx e2e main-e2e --spec=cart.spec.ts
+```
+
+## 📦 Building for Production
+
+Build all applications:
+
+```bash
+# Build all apps
+pnpm nx run-many --target=build --all --configuration=production
+
+# Build specific app
+pnpm nx build main --configuration=production
+pnpm nx build cart-mfe --configuration=production
+pnpm nx build profile-mfe --configuration=production
+```
+
+Build output will be in `dist/` directory.
+
+## 🔑 Key Features Demonstrated
+
+### 1. Angular Signals
+- Signal-based components with `signal()` and `computed()`
+- Reactive UI updates without manual change detection
+- Used in navigation cart counter, product filtering, and more
+
+### 2. NgRx Signal Store
+- Centralized state management with signals
+- Computed selectors for derived state
+- Methods for state mutations
+- Shared across micro-frontends
+
+### 3. Module Federation
+- Dynamic loading of remote micro-frontends
+- Shared dependencies (Angular, NgRx, etc.)
+- Independent deployment capability
+- Route-based code splitting
+
+### 4. Tailwind CSS + SCSS
+- Utility-first styling with Tailwind
+- Custom SCSS for complex components
+- Responsive design with mobile-first approach
+- Custom color palette and design system
+
+### 5. Micro-Frontend Communication
+- Shared state via NgRx stores
+- Cross-application navigation
+- Consistent styling across apps
+
+## 📚 Learning Resources
+
+### Angular Signals
+- [Angular Signals Documentation](https://angular.dev/guide/signals)
+- [Signal-based Components](https://angular.dev/guide/components)
+
+### NgRx Signals
+- [@ngrx/signals Documentation](https://ngrx.io/guide/signals)
+- [Signal Store Guide](https://ngrx.io/guide/signals/signal-store)
+
+### Module Federation
+- [Native Federation for Angular](https://www.npmjs.com/package/@angular-architects/native-federation)
+- [Micro-Frontend Architecture](https://micro-frontends.org/)
+
+### Nx Monorepo
+- [Nx Documentation](https://nx.dev)
+- [Angular with Nx](https://nx.dev/recipes/angular)
+
+## 🛠️ Development Tips
+
+### Adding a New Micro-Frontend
+
+1. Generate new Angular app:
+   ```bash
+   pnpm nx g @nx/angular:app my-mfe --style=scss --routing=true
+   ```
+
+2. Initialize Native Federation:
+   ```bash
+   pnpm nx g @angular-architects/native-federation:init --project=my-mfe --port=4203 --type=remote
+   ```
+
+3. Create remote entry routes and expose them in `federation.config.js`
+
+4. Add route in main app to load the remote
+
+### Creating a New Signal Store
+
+1. Create store file in `libs/shared/data-access/src/lib/stores/`
+2. Use `signalStore` with `withState`, `withComputed`, and `withMethods`
+3. Export from `libs/shared/data-access/src/index.ts`
+4. Inject and use in components
+
+## 📝 Project Commands
+
+```bash
+# Development
+pnpm nx serve main              # Serve main app
+pnpm nx serve cart-mfe          # Serve cart micro-frontend
+pnpm nx serve profile-mfe       # Serve profile micro-frontend
+
+# Testing
+pnpm nx test main               # Run unit tests
+pnpm nx e2e main-e2e            # Run E2E tests
+pnpm nx test main --coverage    # Test with coverage
+
+# Building
+pnpm nx build main              # Build main app
+pnpm nx build cart-mfe          # Build cart MFE
+pnpm nx build profile-mfe       # Build profile MFE
+
+# Linting
+pnpm nx lint main               # Lint main app
+pnpm nx lint cart-mfe           # Lint cart MFE
+
+# Code Generation
+pnpm nx g @nx/angular:component my-component --project=main
+pnpm nx g @nx/angular:library my-lib
+```
+
+## 🤝 Contributing
+
+This is a learning project demonstrating Angular micro-frontend patterns. Feel free to:
+
+- Experiment with the code
+- Add new features
+- Try different state management patterns
+- Extend the micro-frontend architecture
+
+## 📄 License
+
+MIT
+
+---
+
+**Built with ❤️ using Angular 20, Nx, NgRx Signals, and Tailwind CSS**

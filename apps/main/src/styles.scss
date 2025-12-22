@@ -1,1 +1,56 @@
 /* You can add global styles to this file, and also import other style files */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom SCSS Variables */
+$primary-color: #0ea5e9;
+$secondary-color: #a855f7;
+$text-dark: #1f2937;
+$text-light: #6b7280;
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: $text-dark;
+  line-height: 1.6;
+}
+
+/* Custom Component Styles */
+.card {
+  @apply rounded-lg shadow-md p-6 bg-white transition-all duration-300;
+  
+  &:hover {
+    @apply shadow-xl;
+    transform: translateY(-4px);
+  }
+}
+
+.btn-primary {
+  @apply px-6 py-3 bg-primary-500 text-white rounded-lg font-semibold transition-all duration-200;
+  
+  &:hover {
+    @apply bg-primary-600 shadow-lg;
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-secondary-500 text-white rounded-lg font-semibold transition-all duration-200;
+  
+  &:hover {
+    @apply bg-secondary-600 shadow-lg;
+    transform: translateY(-2px);
+  }
+}
