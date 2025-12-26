@@ -1,4 +1,4 @@
 {
-	"cartMfe": "http://localhost:4200/remoteEntry.json",
-	"profileMfe": "http://localhost:4200/remoteEntry.json"
+	"cart-mfe": "http://localhost:8080/cart-mfe/remoteEntry.json",
+	"profile-mfe": "http://localhost:8080/profile-mfe/remoteEntry.json"
 }

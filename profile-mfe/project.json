@@ -121,6 +121,30 @@
       "options": {
         "port": 4202
       }
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t ecommerce-profile-mfe:latest -f profile-mfe/Dockerfile .",
+        "cwd": "{workspaceRoot}"
+      },
+      "configurations": {
+        "production": {
+          "command": "docker build -t ecommerce-profile-mfe:latest -t ecommerce-profile-mfe:{args.tag} -f profile-mfe/Dockerfile ."
+        }
+      }
+    },
+    "docker-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker run -d -p 8082:80 --name ecommerce-profile-mfe ecommerce-profile-mfe:latest"
+      }
+    },
+    "docker-stop": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker stop ecommerce-profile-mfe && docker rm ecommerce-profile-mfe"
+      }
     }
   }
 }

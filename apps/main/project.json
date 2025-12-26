@@ -112,6 +112,30 @@
         }
       },
       "defaultConfiguration": "production"
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t ecommerce-main:latest -f apps/main/Dockerfile .",
+        "cwd": "{workspaceRoot}"
+      },
+      "configurations": {
+        "production": {
+          "command": "docker build -t ecommerce-main:latest -t ecommerce-main:{args.tag} -f apps/main/Dockerfile ."
+        }
+      }
+    },
+    "docker-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker run -d -p 8080:80 --name ecommerce-main ecommerce-main:latest"
+      }
+    },
+    "docker-stop": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker stop ecommerce-main && docker rm ecommerce-main"
+      }
     }
   }
 }

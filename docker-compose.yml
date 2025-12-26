@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # Nginx Gateway - Path-based routing (matches GKE Ingress)
+  gateway:
+    image: nginx:alpine
+    container_name: ecommerce-gateway
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx-gateway.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - main
+      - cart-mfe
+      - profile-mfe
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # Main Shell Application (Host)
+  main:
+    build:
+      context: .
+      dockerfile: apps/main/Dockerfile
+    container_name: ecommerce-main
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - ecommerce-network
+
+  # Cart Micro-Frontend (Remote)
+  cart-mfe:
+    build:
+      context: .
+      dockerfile: cart-mfe/Dockerfile
+    container_name: ecommerce-cart-mfe
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - ecommerce-network
+
+  # Profile Micro-Frontend (Remote)
+  profile-mfe:
+    build:
+      context: .
+      dockerfile: profile-mfe/Dockerfile
+    container_name: ecommerce-profile-mfe
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - ecommerce-network
+
+networks:
+  ecommerce-network:
+    driver: bridge

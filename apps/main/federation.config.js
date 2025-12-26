@@ -6,6 +6,18 @@ module.exports = withNativeFederation({
 
   shared: {
     ...shareAll({ singleton: true, strictVersion: true, requiredVersion: 'auto' }),
+    '@ecommerce-platform/shared/data-access': {
+      singleton: true,
+      strictVersion: false,
+      requiredVersion: false,
+      eager: true,
+    },
+    '@ecommerce-platform/shared/models': {
+      singleton: true,
+      strictVersion: false,
+      requiredVersion: false,
+      eager: true,
+    },
   },
 
   skip: [

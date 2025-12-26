@@ -121,6 +121,30 @@
       "options": {
         "port": 4201
       }
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t ecommerce-cart-mfe:latest -f cart-mfe/Dockerfile .",
+        "cwd": "{workspaceRoot}"
+      },
+      "configurations": {
+        "production": {
+          "command": "docker build -t ecommerce-cart-mfe:latest -t ecommerce-cart-mfe:{args.tag} -f cart-mfe/Dockerfile ."
+        }
+      }
+    },
+    "docker-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker run -d -p 8081:80 --name ecommerce-cart-mfe ecommerce-cart-mfe:latest"
+      }
+    },
+    "docker-stop": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker stop ecommerce-cart-mfe && docker rm ecommerce-cart-mfe"
+      }
     }
   }
 }

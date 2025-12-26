@@ -1,5 +1,6 @@
 import { Route } from '@angular/router';
 import { ProductListComponent } from './components/product-list.component';
+import { loadRemoteModule } from '@angular-architects/native-federation';
 
 
 export const appRoutes: Route[] = [
@@ -9,10 +10,12 @@ export const appRoutes: Route[] = [
     },
     {
         path: 'cart',
-        loadComponent: () => import('@ecommerce-platform/cart').then((m) => m.CartComponent),
+        loadChildren: () =>
+            loadRemoteModule('cart-mfe', './Routes').then((m) => m.CART_ROUTES),
     },
     {
         path: 'profile',
-        loadComponent: () => import('@ecommerce-platform/profile').then((m) => m.ProfileComponent),
+        loadChildren: () =>
+            loadRemoteModule('profile-mfe', './Routes').then((m) => m.PROFILE_ROUTES),
     },
 ];

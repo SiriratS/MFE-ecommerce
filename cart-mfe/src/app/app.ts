@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+import { CartComponent } from '@ecommerce-platform/cart';
 
 @Component({
-  imports: [NxWelcome, RouterModule],
+  imports: [CartComponent, RouterModule],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',
