@@ -1,0 +1,10 @@
+# Ignore temporary kubectl files
+*.tmp
+*.swp
+
+# Ignore secrets (if any are created locally)
+*-secret.yaml
+secrets/
+
+# Ignore generated files
+*.generated.yaml

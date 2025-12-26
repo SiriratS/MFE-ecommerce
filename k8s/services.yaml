@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: main-mfe-service
+  labels:
+    app: main-mfe
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: main-mfe
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-mfe-service
+  labels:
+    app: cart-mfe
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: cart-mfe
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: profile-mfe-service
+  labels:
+    app: profile-mfe
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: profile-mfe

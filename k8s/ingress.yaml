@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ecommerce-ingress
+  annotations:
+    kubernetes.io/ingress.class: 'gce'
+    # SSL and static IP can be added later when you have a domain
+spec:
+  rules:
+    - http:
+        paths:
+          # Main/Host application - serves root
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: main-mfe-service
+                port:
+                  number: 80
+
+          # Cart micro-frontend - serves /cart/*
+          - path: /cart
+            pathType: Prefix
+            backend:
+              service:
+                name: cart-mfe-service
+                port:
+                  number: 80
+
+          # Profile micro-frontend - serves /profile/*
+          - path: /profile
+            pathType: Prefix
+            backend:
+              service:
+                name: profile-mfe-service
+                port:
+                  number: 80
